@@ -5,6 +5,10 @@
 #endif
 
 #if 0
+#ifdef new
+#undef new
+#endif
+
 #include <new>
 #include <memory>
 #include <vector>
@@ -14,11 +18,6 @@
 #include <iostream>
 #include <ostream>
 #include <cstdlib>
-
-
-#ifdef new
-#undef new
-#endif
 
 namespace ndt {
 namespace detail
