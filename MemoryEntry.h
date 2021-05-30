@@ -29,10 +29,21 @@ struct entry_t
 
 inline std::ostream& operator << (std::ostream& os, const entry_t& entry)
 {
+	/*
+		os << entry.bytes << "B leaked using '" << (entry.is_array ? "new[]" : "new")
+			<< "' -> '" << entry.file << ":" << entry.line << "' in '" << entry.func << "'";
+	*/
 	os << "thrd: " << entry.thread_id << "\t"
-		<< "ptr: " << entry.allocated_ptr << "\n"
-		<< "-------stack trace-------\n"
-		<< entry.stack_dump << "\n";
+		<< "ptr: " << entry.allocated_ptr << "\t" << entry.size_in_bytes << " Bytes\n"
+		<< "stack trace:";
+	if (entry.stack_dump.size())
+	{
+		os << "\n" << entry.stack_dump << "\n";
+	}
+	else
+	{
+		os << " is empty!\n";
+	}
 	return os;
 }
 

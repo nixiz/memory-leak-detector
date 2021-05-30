@@ -12,6 +12,7 @@ public:
   class Client
   {
   public:
+    virtual ~Client() = default;
     virtual size_t NumberOfAllocations() const = 0;
     virtual const std::thread::id& GetWorkingThread() const = 0;
     virtual void DumpCurrentAllocations(entry_set_t *global_entry_table) = 0;

@@ -73,6 +73,7 @@ public:
 
   void ServiceThreadMain()
   {
+    static unsigned long counter = 0;
     while (is_active->load())
     {
       std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -80,13 +81,14 @@ public:
         std::lock_guard<std::mutex> lock(*guard);
         for (const auto& agent : *agents)
         {
-          std::cout << "start  dump for thread[" << agent->GetWorkingThread() << "]\n";
           agent->DumpCurrentAllocations(global_entry_table);
-          std::cout << "stoped dump for thread[" << agent->GetWorkingThread() << "]\n";
         }
       }
-      for (auto& enrty : *global_entry_table) {
-        std::cout << enrty << "\n";
+      if (false && ++counter % 10 == 0)
+      {
+        for (auto& enrty : *global_entry_table) {
+          std::cout << enrty << std::endl;
+        }
       }
     }
   }

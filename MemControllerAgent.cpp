@@ -13,6 +13,8 @@
 #include <sstream>
 
 
+static const std::thread::id main_thdr_id = std::this_thread::get_id();
+
 class MemControllerAgentImpl final
 	: public MemLeakControllerService::Client
 {
@@ -91,13 +93,18 @@ private:
 MemControllerAgent::MemControllerAgent() 
 {
 	auto thid = std::this_thread::get_id();
-	//working_thread = *reinterpret_cast<unsigned int*>(&thid);
-	p_impl = malloc_new<MemControllerAgentImpl>(thid);
+	malloc_create(&p_impl, thid);
 }
 
 MemControllerAgent::~MemControllerAgent() {
-	if (p_impl) {
-		p_impl->~MemControllerAgentImpl();
+	// do not release main thread memory controller agent due to seg faults on static dtors.
+	if (main_thdr_id != p_impl->GetWorkingThread())
+	{
+		free_new(p_impl);
+	}
+	else
+	{
+		std::cerr << "Upps I leaked" << sizeof(MemControllerAgentImpl) << " bytes but it's okay!\n";
 	}
 }
 
