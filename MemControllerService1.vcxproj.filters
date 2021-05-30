@@ -30,12 +30,18 @@
     <ClInclude Include="malloc_allocator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MemoryEntry.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stack_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MemControllerAgent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MemControllerService.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MemLeakControllerService.cpp">

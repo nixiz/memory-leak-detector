@@ -247,7 +247,7 @@ void operator delete [](void* ptr, ndt::detail::string_t, int, ndt::detail::stri
 #define new new(__FILE__, __LINE__, __FUNCTION__)
 #endif
 
-#endif
+#else
 
 #include "MemControllerAgent.h"
 
@@ -275,7 +275,7 @@ struct new_operator_traits<true>
 };
 
 #endif
-
+// TODO agent sayfasýna taþý
 struct memdtl
 {
 	static inline MemControllerAgent* agent()
@@ -288,13 +288,9 @@ struct memdtl
 template <bool have_nothrow = false>
 inline void* new_operator(std::size_t n) noexcept(have_nothrow)
 {
-	//void* ptr = std::malloc(n);
-	//if (ptr)
-	//	memdtl::agent()->allocated(ptr, n);
-
-
-	auto ptr = memdtl::agent()->allocate(n);
-
+	void* ptr = std::malloc(n);
+	if (ptr)
+		memdtl::agent()->allocated(ptr, n);
 #if cpp_ver_above_17
 	if constexpr (!have_nothrow) {
 		if (!ptr) throw std::bad_alloc();
@@ -327,10 +323,16 @@ void* operator new [](std::size_t n, const std::nothrow_t&) noexcept
 
 void operator delete (void* ptr) noexcept
 {
-	memdtl::agent()->deallocate(ptr);
+	_ASSERT(ptr);
+	memdtl::agent()->deallocated(ptr);
+	std::free(ptr);
 }
 
 void operator delete [](void* ptr) noexcept
 {
-	memdtl::agent()->deallocate(ptr);
+	_ASSERT(ptr);
+	memdtl::agent()->deallocated(ptr);
+	std::free(ptr);
 }
+
+#endif

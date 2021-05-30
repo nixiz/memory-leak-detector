@@ -114,7 +114,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;DBOOST_STACKTRACE_USE_ADDR2LINE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;BOOST_STACKTRACE_USE_ADDR2LINE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -143,11 +143,13 @@
     <ClInclude Include="MemControllerAgent.h" />
     <ClInclude Include="MemControllerService.h" />
     <ClInclude Include="MemLeakControllerService.h" />
+    <ClInclude Include="MemoryEntry.h" />
     <ClInclude Include="new.hpp" />
+    <ClInclude Include="stack_helper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MemControllerAgent.cpp" />
-    <ClCompile Include="MemControllerService.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="MemLeakControllerService.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

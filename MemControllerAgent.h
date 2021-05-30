@@ -9,18 +9,12 @@ public:
 	MemControllerAgent();
 	~MemControllerAgent();
 
-	void* allocate(size_t n) noexcept;
-	void  deallocate(void* ptr) noexcept;
+	void allocated(void* ptr, size_t n) noexcept;
+	void deallocated(void* ptr) noexcept;
 
-	size_t NumberOfAllocations() const;
-
-protected:
-	unsigned int GetWorkingThread() const;
-	void DumpCurrentAllocations() const;
-	
 private:
 	friend class MemLeakControllerServiceImpl;
 	class MemControllerAgentImpl* p_impl;
-	unsigned int working_thread;
+	//unsigned int working_thread;
 };
 
