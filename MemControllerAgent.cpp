@@ -104,7 +104,7 @@ MemControllerAgent::~MemControllerAgent() {
 	}
 	else
 	{
-		std::cerr << "Upps I leaked" << sizeof(MemControllerAgentImpl) << " bytes but it's okay!\n";
+		std::cerr << "Upps I leaked [" << sizeof(MemControllerAgentImpl) << "] more bytes but it's okay!\n";
 	}
 }
 
