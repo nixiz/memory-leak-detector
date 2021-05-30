@@ -48,7 +48,12 @@ public:
     if (global_alloc_table->size() ||
         global_dealloc_table->size())
     {
+      std::cerr << "\n-----dumping mem leaks-----\n";
       PrintTables(global_alloc_table, global_dealloc_table);
+    }
+    else
+    {
+      std::cout << "you have no mem leaks! have a good day!" << std::endl;
     }
 
     free_new(global_alloc_table);
