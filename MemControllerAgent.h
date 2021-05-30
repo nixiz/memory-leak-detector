@@ -1,8 +1,5 @@
 #pragma once
 
-#include <memory>
-//#include <thread>
-
 class MemControllerAgent
 {
 public:
@@ -15,6 +12,5 @@ public:
 private:
 	friend class MemLeakControllerServiceImpl;
 	class MemControllerAgentImpl* p_impl;
-	//unsigned int working_thread;
 };
 

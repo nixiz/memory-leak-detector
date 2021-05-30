@@ -11,10 +11,13 @@
 #include <unordered_set>
 #include <boost/thread.hpp>
 
+static const std::thread::id main_thdr_id = std::this_thread::get_id();
+
 class MemLeakControllerServiceImpl
 {
 public:
   MemLeakControllerServiceImpl() 
+    : main_thread_agent{nullptr}
   {
     malloc_create(&guard);
     malloc_create(&is_active, true);
@@ -31,6 +34,11 @@ public:
     worker_thread->join();
     agents->clear();
 
+    if (main_thread_agent)
+    {
+      free_new(main_thread_agent);
+    }
+
     free_new(worker_thread);
     free_new(agents);
     free_new(global_entry_table);
@@ -41,6 +49,11 @@ public:
   void RegisterNewAgent(MemLeakControllerService::Client* agent)
   {
     std::lock_guard<std::mutex> lock(*guard);
+    // get main thread agent and store for delete later.
+    if (!main_thread_agent && 
+        (agent->GetWorkingThread() == main_thdr_id)) {
+      main_thread_agent = agent;
+    }
     auto id = agent->GetWorkingThread();
     auto res = agents->insert(agent);
     if (!res.second)
@@ -63,11 +76,12 @@ public:
       entry_set_t* entry_table = malloc_new<entry_set_t>();
       agent->DumpCurrentAllocations(entry_table);
 
-      std::cerr << "------ Mem Leak! -------\n\n";
+      std::cerr << "------ Possible Mem Leak! -------\n";
+      std::cerr << "thread[" << agent->GetWorkingThread() << "] destroyed without cleaned these allocations:\n";
       for (auto& enrty : *entry_table) {
         std::cerr << enrty << "\n";
       }
-      std::cerr << "------ Mem Leak! [End]-------\n\n" << std::endl;
+      std::cerr << std::endl;
     }
   }
 
@@ -84,6 +98,7 @@ public:
           agent->DumpCurrentAllocations(global_entry_table);
         }
       }
+      // ----- dont dump every xx seconds.. ----
       if (false && ++counter % 10 == 0)
       {
         for (auto& enrty : *global_entry_table) {
@@ -106,6 +121,7 @@ private:
   unordered_set_t *agents;
   entry_set_t* global_entry_table;
   boost::thread *worker_thread;
+  MemLeakControllerService::Client* main_thread_agent;
 };
 
 MemLeakControllerService* MemLeakControllerService::GetInstance()

@@ -252,13 +252,13 @@ void operator delete [](void* ptr, ndt::detail::string_t, int, ndt::detail::stri
 #include <new>
 #include "MemControllerAgent.h"
 
-#if __cplusplus >= 201703L
-#define cpp_ver_above_17 1
-#else
-#define cpp_ver_above_17 0
-#endif
-
-#if cpp_ver_above_17 == 0
+//#if __cplusplus >= 201703L
+//#define cpp_ver_above_17 1
+//#else
+//#define cpp_ver_above_17 0
+//#endif
+//
+//#if cpp_ver_above_17 == 0
 
 template <bool have_nothrow = false>
 struct new_operator_traits
@@ -275,7 +275,8 @@ struct new_operator_traits<true>
 	static inline void bad_alloc() noexcept { }
 };
 
-#endif
+//#endif
+// 
 // TODO agent sayfasýna taþý
 struct memdtl
 {
@@ -290,15 +291,8 @@ template <bool have_nothrow = false>
 inline void* new_operator(std::size_t n) noexcept(have_nothrow)
 {
 	void* ptr = std::malloc(n);
-	if (ptr)
-		memdtl::agent()->allocated(ptr, n);
-#if cpp_ver_above_17
-	if constexpr (!have_nothrow) {
-		if (!ptr) throw std::bad_alloc();
-	}
-#else
 	if (!ptr) new_operator_traits<have_nothrow>::bad_alloc();
-#endif
+	else memdtl::agent()->allocated(ptr, n);
 	return ptr;
 }
 

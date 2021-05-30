@@ -12,7 +12,6 @@
 #include <string>
 #include <sstream>
 
-
 static const std::thread::id main_thdr_id = std::this_thread::get_id();
 
 class MemControllerAgentImpl final
@@ -102,10 +101,10 @@ MemControllerAgent::~MemControllerAgent() {
 	{
 		free_new(p_impl);
 	}
-	else
-	{
-		std::cerr << "Upps I leaked [" << sizeof(MemControllerAgentImpl) << "] more bytes but it's okay!\n";
-	}
+	//else
+	//{
+	//	std::cerr << "Upps I leaked [" << sizeof(MemControllerAgentImpl) << "] more bytes but it's okay!\n";
+	//}
 }
 
 void MemControllerAgent::allocated(void* ptr, size_t n) noexcept
