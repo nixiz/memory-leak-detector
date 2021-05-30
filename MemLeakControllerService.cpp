@@ -20,9 +20,11 @@ public:
     : main_thread_agent{nullptr}
   {
     malloc_create(&guard);
+    malloc_create(&table_guard);
     malloc_create(&is_active, true);
     malloc_create(&agents);
-    malloc_create(&global_entry_table);
+    malloc_create(&global_alloc_table);
+    malloc_create(&global_dealloc_table);
     worker_thread = malloc_new<boost::thread>(boost::bind(&MemLeakControllerServiceImpl::ServiceThreadMain, this));
     //malloc_create(&worker_thread, 
     //              std::bind(&MemLeakControllerServiceImpl::ServiceThreadMain, this));
@@ -41,9 +43,63 @@ public:
 
     free_new(worker_thread);
     free_new(agents);
-    free_new(global_entry_table);
+    // 
+    MergeTables(global_alloc_table, global_dealloc_table);
+    if (global_alloc_table->size() ||
+        global_dealloc_table->size())
+    {
+      PrintTables(global_alloc_table, global_dealloc_table);
+    }
+
+    free_new(global_alloc_table);
+    free_new(global_dealloc_table);
     free_new(guard);
+    free_new(table_guard);
     free_new(is_active);
+  }
+
+  inline void PrintTables(entry_set_t* alloc_entry_table,
+                          entry_set_t* dealloc_entry_table)
+  {
+    if (alloc_entry_table->size())
+    {
+      std::cerr << "------ Possible Mem Leak! -------\n";
+      //std::cerr << "thread[" << agent->GetWorkingThread() << "] destroyed without cleaned these allocations:\n";
+      std::cerr << "agent destroyed without cleaned these allocations:\n";
+      for (auto& enrty : *alloc_entry_table) {
+        std::cerr << enrty << "\n";
+      }
+      std::cerr << std::endl;
+    }
+
+    if (dealloc_entry_table->size())
+    {
+      std::cerr << "------ Possible Mem Missmatch! -------\n";
+      std::cerr << "agent released allocations which are not allocated by itself:\n";
+      for (auto& enrty : *dealloc_entry_table) {
+        std::cerr << enrty << "\n";
+      }
+      std::cerr << std::endl;
+    }
+  }
+
+  inline void MergeTables(entry_set_t* alloc_entry_table,
+                          entry_set_t* dealloc_entry_table)
+  {
+    // merge tables and erase deallocated memory entries from both lists
+    //std::vector<entry_set_t::const_iterator, malloc_allocator_t<entry_set_t::const_iterator>> dealloc_entry_list;
+    //dealloc_entry_list.reserve(dealloc_entry_table->size());
+    for (auto it = dealloc_entry_table->begin();
+         it != dealloc_entry_table->end(); /*++it*/)
+    {
+      auto erased = alloc_entry_table->erase(*it);
+      if (erased) {
+        it = dealloc_entry_table->erase(it);
+      }
+      else {
+        it++;
+      }
+    }
   }
 
   void RegisterNewAgent(MemLeakControllerService::Client* agent)
@@ -64,25 +120,26 @@ public:
 
   void UnRegisterNewAgent(MemLeakControllerService::Client* agent)
   {
-    std::lock_guard<std::mutex> lock(*guard);
-    auto res = agents->find(agent);
-    if (res != agents->end())
     {
-      agents->erase(agent);
-    }
-
-    if (agent->NumberOfAllocations())
-    {
-      entry_set_t* entry_table = malloc_new<entry_set_t>();
-      agent->DumpCurrentAllocations(entry_table);
-
-      std::cerr << "------ Possible Mem Leak! -------\n";
-      std::cerr << "thread[" << agent->GetWorkingThread() << "] destroyed without cleaned these allocations:\n";
-      for (auto& enrty : *entry_table) {
-        std::cerr << enrty << "\n";
+      std::lock_guard<std::mutex> lock(*guard);
+      auto res = agents->find(agent);
+      if (res != agents->end())
+      {
+        agents->erase(agent);
       }
-      std::cerr << std::endl;
     }
+
+    entry_set_t* alloc_entry_table = malloc_new<entry_set_t>();
+    entry_set_t* dealloc_entry_table = malloc_new<entry_set_t>();
+    agent->DumpCurrentAllocations(alloc_entry_table, dealloc_entry_table);
+    MergeTables(alloc_entry_table, dealloc_entry_table);
+    PrintTables(alloc_entry_table, dealloc_entry_table);
+
+    std::lock_guard<std::mutex> lock(*table_guard);
+    global_alloc_table->insert(alloc_entry_table->begin(),
+                                alloc_entry_table->end());
+    global_dealloc_table->insert(dealloc_entry_table->begin(),
+                                 dealloc_entry_table->end());
   }
 
   void ServiceThreadMain()
@@ -93,16 +150,16 @@ public:
       std::this_thread::sleep_for(std::chrono::seconds(1));
       {
         std::lock_guard<std::mutex> lock(*guard);
+        std::lock_guard<std::mutex> tlock(*table_guard);
         for (const auto& agent : *agents)
         {
-          agent->DumpCurrentAllocations(global_entry_table);
+          agent->DumpCurrentAllocations(global_alloc_table, global_dealloc_table);
         }
-      }
-      // ----- dont dump every xx seconds.. ----
-      if (false && ++counter % 10 == 0)
-      {
-        for (auto& enrty : *global_entry_table) {
-          std::cout << enrty << std::endl;
+
+        if (++counter % 10 == 0)
+        {
+          MergeTables(global_alloc_table, global_dealloc_table);
+          PrintTables(global_alloc_table, global_dealloc_table);
         }
       }
     }
@@ -117,9 +174,11 @@ private:
   >;
 
   std::mutex *guard;
+  std::mutex *table_guard;
   std::atomic_bool *is_active;
   unordered_set_t *agents;
-  entry_set_t* global_entry_table;
+  entry_set_t* global_alloc_table;
+  entry_set_t* global_dealloc_table;
   boost::thread *worker_thread;
   MemLeakControllerService::Client* main_thread_agent;
 };

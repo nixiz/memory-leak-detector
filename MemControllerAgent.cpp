@@ -21,7 +21,8 @@ public:
 	MemControllerAgentImpl(const std::thread::id& tid_)
 		: tid(tid_)
 	{
-		local_entry_table = malloc_new<entry_set_t>();
+		malloc_create(&alloc_entry_table);
+		malloc_create(&dealloc_entry_table);
 		malloc_create(&should_lock, false);
 		malloc_create(&guard);
 
@@ -33,7 +34,8 @@ public:
 	{
 		std::cout << "Bye! from thread: " << tid << "\n";
 		MemLeakControllerService::GetInstance()->UnRegisterNewAgent(this);
-		free_new(local_entry_table);
+		free_new(alloc_entry_table);
+		free_new(dealloc_entry_table);
 		free_new(guard);
 		free_new(should_lock);
 	}
@@ -41,7 +43,7 @@ public:
 	void OnNewAllocation(void* ptr, size_t n)
 	{
 		std::unique_lock<std::mutex> lock(*guard);
-		auto res = local_entry_table->insert(entry_t{ptr, n, tid, ""});
+		auto res = alloc_entry_table->insert(entry_t{ptr, n, tid, ""});
 		if (!res.second) {
 			std::cerr << "this cannot ben possible!" << std::endl;
 		}
@@ -50,24 +52,16 @@ public:
 	void OnDelAllocation(void* ptr)
 	{
 		std::unique_lock<std::mutex> lock(*guard);
-		auto it = local_entry_table->find(entry_t{ptr});
-		if (it != local_entry_table->end())
-		{
-			local_entry_table->erase(it);
-		}
-		else
-		{
-			std::cerr 
-				<< "deallocation of ptr: " << ptr 
-				<< " made in another thread[" << tid << "]" 
-				<< std::endl;
+		auto res = dealloc_entry_table->insert(entry_t{ptr});
+		if (!res.second) {
+			std::cerr << "this cannot ben possible!" << std::endl;
 		}
 	}
 
 	size_t NumberOfAllocations() const override
 	{
 		std::unique_lock<std::mutex> lock(*guard);
-		return local_entry_table->size();
+		return alloc_entry_table->size();
 	}
 
 	const std::thread::id& GetWorkingThread() const override
@@ -75,15 +69,19 @@ public:
 		return tid;
 	}
 
-	void DumpCurrentAllocations(entry_set_t* global_entry_table)
+	void DumpCurrentAllocations(entry_set_t* g_alloc_entry_table,
+															entry_set_t* g_dealloc_entry_table) override
 	{
 		std::unique_lock<std::mutex> lock(*guard);
-		global_entry_table->insert(local_entry_table->begin(), 
-															 local_entry_table->end());
+		g_alloc_entry_table->insert(alloc_entry_table->begin(),
+																alloc_entry_table->end());
+		g_dealloc_entry_table->insert(dealloc_entry_table->begin(),
+																	dealloc_entry_table->end());
 	}
 	
 private:
-	entry_set_t *local_entry_table;
+	entry_set_t *alloc_entry_table;
+	entry_set_t *dealloc_entry_table;
 	std::atomic_bool* should_lock;
 	std::mutex* guard;
 	std::thread::id tid;

@@ -141,7 +141,6 @@
   <ItemGroup>
     <ClInclude Include="malloc_allocator.hpp" />
     <ClInclude Include="MemControllerAgent.h" />
-    <ClInclude Include="MemControllerService.h" />
     <ClInclude Include="MemLeakControllerService.h" />
     <ClInclude Include="MemoryEntry.h" />
     <ClInclude Include="new.hpp" />

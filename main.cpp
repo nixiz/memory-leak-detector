@@ -85,14 +85,16 @@ int main()
 	auto xnt  = new(std::nothrow) int(13);
 	delete xnt;
 
-	std::thread th([] 
+	double* d_ptr{};
+
+	std::thread th([&d_ptr]
 	{
-		new double(3.14);
+		d_ptr = new double(3.14);
 	}); 
 	//std::this_thread::sleep_for(std::chrono::seconds(3));
 	getchar();
 	th.join();
-
+	delete d_ptr;
 	//auto ivec = leak_vec();
 
 	//ndt::dump_all();

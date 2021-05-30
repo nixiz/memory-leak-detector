@@ -18,9 +18,6 @@
     <ClInclude Include="MemControllerAgent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MemControllerService.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="new.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
