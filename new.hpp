@@ -4,6 +4,7 @@
 #error C++ compiler is required!"
 #endif
 
+#if 0
 #include <new>
 #include <memory>
 #include <vector>
@@ -14,7 +15,7 @@
 #include <ostream>
 #include <cstdlib>
 
-#if 0
+
 #ifdef new
 #undef new
 #endif
@@ -249,6 +250,7 @@ void operator delete [](void* ptr, ndt::detail::string_t, int, ndt::detail::stri
 
 #else
 
+#include <new>
 #include "MemControllerAgent.h"
 
 #if __cplusplus >= 201703L
