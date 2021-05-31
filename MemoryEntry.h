@@ -9,8 +9,9 @@
 using malloc_string = std::basic_string<char, std::char_traits<char>, malloc_allocator_t<char>>;
 struct entry_t
 {
-	entry_t(void* allocated_ptr_)
+	entry_t(void* allocated_ptr_, std::thread::id thread_id_)
 		: allocated_ptr(allocated_ptr_)
+		, thread_id(thread_id_)
 	{ }
 	entry_t(void* allocated_ptr_,
 					size_t size_in_bytes_,

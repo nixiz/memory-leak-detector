@@ -52,7 +52,7 @@ public:
 	void OnDelAllocation(void* ptr)
 	{
 		std::unique_lock<std::mutex> lock(*guard);
-		auto res = dealloc_entry_table->insert(entry_t{ptr});
+		auto res = dealloc_entry_table->insert(entry_t{ptr, tid });
 		if (!res.second) {
 			std::cerr << "this cannot ben possible!" << std::endl;
 		}

@@ -160,12 +160,11 @@ public:
         {
           agent->DumpCurrentAllocations(global_alloc_table, global_dealloc_table);
         }
-
-        if (++counter % 10 == 0)
-        {
-          MergeTables(global_alloc_table, global_dealloc_table);
-          PrintTables(global_alloc_table, global_dealloc_table);
-        }
+        //if (++counter % 10 == 0)
+        //{
+        //  MergeTables(global_alloc_table, global_dealloc_table);
+        //  PrintTables(global_alloc_table, global_dealloc_table);
+        //}
       }
     }
   }
